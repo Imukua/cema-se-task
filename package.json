@@ -39,7 +39,9 @@
   "homepage": "https://github.com/Imukua/cema-se-task#readme",
   "dependencies": {
     "@prisma/client": "^6.6.0",
+    "@types/bcryptjs": "^2.4.6",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
