@@ -4,7 +4,15 @@
   "description": "A program that simulates a basic health information system for managing clients and health programs/services",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
+    "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
+    "postinstall": "prisma generate",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prettier": "prettier --check **/*.ts",
+    "prettier:fix": "prettier --write **/*.ts",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
