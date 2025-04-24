@@ -20,8 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 
 app.use(cors());
-app.options('*', cors());
-
+app.options(/(.*)/, cors());
 
 
 export default app;
