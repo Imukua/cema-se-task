@@ -8,3 +8,61 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clients   Client[]
+}
+
+model Client {
+  id        String       @id @default(uuid())
+  fullName  String
+  dob       DateTime
+  gender    String
+  contact   String
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  programs  Enrollment[]
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+}
+
+model HealthProgram {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id             String         @id @default(uuid())
+  clientId       String
+  programId      String
+  enrolledAt     DateTime       @default(now())
+  status         EnrollmentStatus @default(active)
+  notes          String?
+  client         Client         @relation(fields: [clientId], references: [id])
+  healthProgram  HealthProgram  @relation(fields: [programId], references: [id])
+
+  @@unique([clientId, programId]) 
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum EnrollmentStatus {
+  active
+  completed
+  dropped
+}
