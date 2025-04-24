@@ -1,0 +1,8 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npm lint-staged
+npx eslint .
+
+
+# npx husky add .husky/pre-commit "npx eslint ."
