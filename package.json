@@ -25,6 +25,7 @@
     "express": "^5.1.0",
     "morgan": "^1.10.0",
     "pm2": "^6.0.5",
+    "winston": "^3.17.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
