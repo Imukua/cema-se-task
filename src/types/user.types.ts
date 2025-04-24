@@ -3,12 +3,12 @@ import { UserRole } from '@prisma/client';
 
 export const UserSchema = z.object({
   id: z.string().uuid(),
-  name: z.string(),
-  email: z.string().email(),
+  name: z.string().min(3, 'Name is required'),
+  email: z.string().email().min(3, 'Email is required'),
   role: z.nativeEnum(UserRole, { message: 'Role must be either ADMIN or USER' }).nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  password: z.string().min(8)
+  password: z.string().min(8, 'Password is required')
 });
 
 export const UserCreateSchema = UserSchema.omit({
