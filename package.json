@@ -36,6 +36,7 @@
   "bugs": {
     "url": "https://github.com/Imukua/cema-se-task/issues"
   },
+  "type": "module",
   "homepage": "https://github.com/Imukua/cema-se-task#readme",
   "dependencies": {
     "@prisma/client": "^6.6.0",
