@@ -12,7 +12,7 @@ import encription from '../utils/encription';
  * @param {UserCreate} userData - The user data for creation.
  * @returns {Promise<User>} The created user.
  */
-const createUser = async (userData: UserCreate): Promise<User> => {
+const createUser: (userData: UserCreate) => Promise<User> = async (userData) => {
   const existingUser = await prisma.user.findUnique({
     where: { email: userData.email }
   });
