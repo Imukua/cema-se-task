@@ -1,34 +1,67 @@
 import { Request, Response } from 'express';
-import logger from '../config/logger';
+import catchAsync from '../utils/catchAsync';
+import { clientService } from '../services';
+import { ClientCreateSchema, ClientUpdateSchema } from '../types/client.types';
+import httpStatus from 'http-status';
 
-const createClient = (req: Request, res: Response) => {
-  logger.info('Mock Client Controller: createClient');
-  res
-    .status(200)
-    .json({ message: 'Mock createClient endpoint hit', body: req.body, user: (req as any).user });
-};
+/**
+ * Create a new client.
+ */
+const createClient = catchAsync(async (req: Request, res: Response) => {
+  const clientData = ClientCreateSchema.parse(req.body);
 
-const searchClients = (req: Request, res: Response) => {
-  logger.info('Mock Client Controller: searchClients');
-  res.status(200).json({ message: 'Mock searchClients endpoint hit', query: req.query });
-};
+  const userId = (req as any).user.id;
 
-const getClientProfile = (req: Request, res: Response) => {
-  logger.info('Mock Client Controller: getClientProfile');
-  res.status(200).json({ message: 'Mock getClientProfile endpoint hit', params: req.params });
-};
+  const client = await clientService.createClient({ ...clientData, userId });
 
-const updateClient = (req: Request, res: Response) => {
-  logger.info('Mock Client Controller: updateClient');
-  res
-    .status(200)
-    .json({ message: 'Mock updateClient endpoint hit', params: req.params, body: req.body });
-};
+  res.status(httpStatus.CREATED).send(client);
+});
 
-const deleteClient = (req: Request, res: Response) => {
-  logger.info('Mock Client Controller: deleteClient');
-  res.status(200).json({ message: 'Mock deleteClient endpoint hit', params: req.params });
-};
+/**
+ * Search clients with pagination and filtering.
+ */
+const searchClients = catchAsync(async (req: Request, res: Response) => {
+  const filter = req.query.filter ? JSON.parse(req.query.filter as string) : {};
+  const options = req.query.options ? JSON.parse(req.query.options as string) : {};
+
+  const result = await clientService.queryClients(filter, options);
+
+  res.status(httpStatus.OK).send(result);
+});
+
+/**
+ * Get a client profile by ID, including enrollments.
+ */
+const getClientProfile = catchAsync(async (req: Request, res: Response) => {
+  const clientId = req.params.clientId;
+
+  const client = await clientService.getClientById(clientId);
+
+  res.status(httpStatus.OK).send(client);
+});
+
+/**
+ * Update a client by ID.
+ */
+const updateClient = catchAsync(async (req: Request, res: Response) => {
+  const clientId = req.params.clientId;
+  const updateBody = ClientUpdateSchema.parse(req.body);
+
+  const client = await clientService.updateClientById(clientId, updateBody);
+
+  res.status(httpStatus.OK).send(client);
+});
+
+/**
+ * Delete a client by ID.
+ */
+const deleteClient = catchAsync(async (req: Request, res: Response) => {
+  const clientId = req.params.clientId;
+
+  await clientService.deleteClientById(clientId);
+
+  res.status(httpStatus.NO_CONTENT).send();
+});
 
 export default {
   createClient,
