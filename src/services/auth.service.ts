@@ -21,7 +21,7 @@ const createUser: (userData: UserCreate) => Promise<User> = async (userData) => 
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
 
-  const hashedPassword = await encription.hashPassword('password');
+  const hashedPassword = await encription.hashPassword(userData.password);
 
   const user = await prisma.user.create({
     data: {
