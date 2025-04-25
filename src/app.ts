@@ -4,6 +4,8 @@ import cors from 'cors';
 import config from './config/config';
 import morgan from './config/morgan';
 import routes from './routes/v1';
+import passport from 'passport';
+import strategy from './config/passport';
 
 const app = express();
 
@@ -17,6 +19,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(compression());
+app.use(passport.initialize());
+app.use(passport.initialize());
+
+passport.use(strategy);
 
 app.use(cors());
 app.options(/(.*)/, cors());
