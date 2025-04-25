@@ -1,4 +1,4 @@
-import prisma from '../client';
+import prisma from '../db.client';
 import { User, UserCreate } from '../types/user.types';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
