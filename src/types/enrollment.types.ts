@@ -7,7 +7,7 @@ export const EnrollmentSchema = z.object({
   programId: z.string().uuid(),
   enrolledAt: z.date(),
   status: z.nativeEnum(EnrollmentStatus, {
-    message: 'Status must be either active, complete, or dropped'
+    message: 'Status must be either active, completed, or dropped'
   }),
   notes: z.string().nullable()
 });
@@ -19,7 +19,9 @@ export const EnrollmentCreateSchema = EnrollmentSchema.omit({
 
 export const EnrollmentUpdateSchema = EnrollmentSchema.partial().omit({
   id: true,
-  enrolledAt: true
+  enrolledAt: true,
+  clientId: true,
+  programId: true
 });
 
 export type Enrollment = z.infer<typeof EnrollmentSchema>;
