@@ -1,16 +1,22 @@
 import express from 'express';
 import { enrollmentController } from '../../controllers';
 import auth from '../../middleware/auth';
+import validate from '../../middleware/validate';
+import { EnrollmentCreateSchema, EnrollmentUpdateSchema } from '../../types/enrollment.types';
 
 const router = express.Router();
 
 router.use(auth());
 
-router.post('/', enrollmentController.createEnrollment);
+router.post('/', validate(EnrollmentCreateSchema), enrollmentController.createEnrollment);
 
 router.get('/client/:clientId', enrollmentController.getClientEnrollments);
 
-router.patch('/:enrollmentId', enrollmentController.updateEnrollment);
+router.patch(
+  '/:enrollmentId',
+  validate(EnrollmentUpdateSchema),
+  enrollmentController.updateEnrollment
+);
 
 router.delete('/:enrollmentId', enrollmentController.deleteEnrollment);
 
