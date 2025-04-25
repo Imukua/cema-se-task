@@ -30,6 +30,9 @@ export const userLoginSchema = UserSchema.pick({
   password: true
 });
 
+export const userRefreshToken = z.object({
+  refreshToken: z.string()
+});
 export type User = z.infer<typeof UserSchema>;
 export type UserCreate = z.infer<typeof UserCreateSchema>;
 export type UserUpdate = z.infer<typeof UserUpdateSchema>;
