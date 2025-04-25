@@ -25,6 +25,12 @@ export const UserUpdateSchema = UserSchema.partial().omit({
   role: true
 });
 
+export const userLoginSchema = UserSchema.pick({
+  email: true,
+  password: true
+});
+
 export type User = z.infer<typeof UserSchema>;
 export type UserCreate = z.infer<typeof UserCreateSchema>;
 export type UserUpdate = z.infer<typeof UserUpdateSchema>;
+export type UserLogin = z.infer<typeof userLoginSchema>;
