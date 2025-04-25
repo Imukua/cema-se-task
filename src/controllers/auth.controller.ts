@@ -10,7 +10,7 @@ import { authService } from '../services';
 const register = catchAsync(async (req: Request, res: Response) => {
   const userData = UserCreateSchema.parse(req.body);
   const user = await authService.createUser(userData);
-  const tokens = await authService.generateAuthTokens(user);
+  const tokens = await authService.generateAuthTokens(user.id);
   res.status(httpStatus.CREATED).send({ user, tokens });
 });
 
@@ -20,7 +20,7 @@ const register = catchAsync(async (req: Request, res: Response) => {
 const login = catchAsync(async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const user = await authService.loginUserWithEmailAndPassword(email, password);
-  const tokens = await authService.generateAuthTokens(user);
+  const tokens = await authService.generateAuthTokens(user.id);
   res.status(httpStatus.OK).send({ user, tokens });
 });
 

@@ -1,4 +1,4 @@
-import prisma from '../client';
+import prisma from '../db.client';
 import { User, UserUpdate } from '../types/user.types';
 import { Prisma } from '@prisma/client';
 import httpStatus from 'http-status';

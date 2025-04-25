@@ -1,32 +1,65 @@
 import { Request, Response } from 'express';
-import logger from '../config/logger';
+import catchAsync from '../utils/catchAsync';
+import { programService } from '../services';
+import { HealthProgramCreateSchema, HealthProgramUpdateSchema } from '../types/healthProgram.types';
+import httpStatus from 'http-status';
 
-const createProgram = (req: Request, res: Response) => {
-  logger.info('Mock Program Controller: createProgram');
-  res.status(200).json({ message: 'Mock createProgram endpoint hit', body: req.body });
-};
+/**
+ * Create a new health program.
+ */
+const createProgram = catchAsync(async (req: Request, res: Response) => {
+  const programData = HealthProgramCreateSchema.parse(req.body);
 
-const getPrograms = (req: Request, res: Response) => {
-  logger.info('Mock Program Controller: getPrograms');
-  res.status(200).json({ message: 'Mock getPrograms endpoint hit', query: req.query });
-};
+  const program = await programService.createProgram(programData);
 
-const getProgram = (req: Request, res: Response) => {
-  logger.info('Mock Program Controller: getProgram');
-  res.status(200).json({ message: 'Mock getProgram endpoint hit', params: req.params });
-};
+  res.status(httpStatus.CREATED).send(program);
+});
 
-const updateProgram = (req: Request, res: Response) => {
-  logger.info('Mock Program Controller: updateProgram');
-  res
-    .status(200)
-    .json({ message: 'Mock updateProgram endpoint hit', params: req.params, body: req.body });
-};
+/**
+ * Get health programs with pagination and filtering.
+ */
+const getPrograms = catchAsync(async (req: Request, res: Response) => {
+  const filter = req.query.filter ? JSON.parse(req.query.filter as string) : {};
+  const options = req.query.options ? JSON.parse(req.query.options as string) : {};
 
-const deleteProgram = (req: Request, res: Response) => {
-  logger.info('Mock Program Controller: deleteProgram');
-  res.status(200).json({ message: 'Mock deleteProgram endpoint hit', params: req.params });
-};
+  const result = await programService.queryPrograms(filter, options);
+
+  res.status(httpStatus.OK).send(result);
+});
+
+/**
+ * Get a health program by ID.
+ */
+const getProgram = catchAsync(async (req: Request, res: Response) => {
+  const programId = req.params.programId;
+
+  const program = await programService.getProgramById(programId);
+
+  res.status(httpStatus.OK).send(program);
+});
+
+/**
+ * Update a health program by ID.
+ */
+const updateProgram = catchAsync(async (req: Request, res: Response) => {
+  const programId = req.params.programId;
+  const updateBody = HealthProgramUpdateSchema.parse(req.body);
+
+  const program = await programService.updateProgramById(programId, updateBody);
+
+  res.status(httpStatus.OK).send(program);
+});
+
+/**
+ * Delete a health program by ID.
+ */
+const deleteProgram = catchAsync(async (req: Request, res: Response) => {
+  const programId = req.params.programId;
+
+  await programService.deleteProgramById(programId);
+
+  res.status(httpStatus.NO_CONTENT).send();
+});
 
 export default {
   createProgram,
