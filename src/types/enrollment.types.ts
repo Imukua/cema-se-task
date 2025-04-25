@@ -17,5 +17,11 @@ export const EnrollmentCreateSchema = EnrollmentSchema.omit({
   enrolledAt: true
 });
 
+export const EnrollmentUpdateSchema = EnrollmentSchema.partial().omit({
+  id: true,
+  enrolledAt: true
+});
+
 export type Enrollment = z.infer<typeof EnrollmentSchema>;
 export type EnrollmentCreate = z.infer<typeof EnrollmentCreateSchema>;
+export type EnrollmentUpdate = z.infer<typeof EnrollmentUpdateSchema>;
