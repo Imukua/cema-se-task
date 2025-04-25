@@ -1,27 +1,55 @@
 import { Request, Response } from 'express';
-import logger from '../config/logger';
+import catchAsync from '../utils/catchAsync';
+import { enrollmentService } from '../services';
+import { EnrollmentCreateSchema } from '../types/enrollment.types';
+import httpStatus from 'http-status';
 
-const createEnrollment = (req: Request, res: Response) => {
-  logger.info('Mock Enrollment Controller: createEnrollment');
-  res.status(200).json({ message: 'Mock createEnrollment endpoint hit', body: req.body });
-};
+/**
+ * Create a new enrollment.
+ */
+const createEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const enrollmentData = EnrollmentCreateSchema.parse(req.body);
 
-const getClientEnrollments = (req: Request, res: Response) => {
-  logger.info('Mock Enrollment Controller: getClientEnrollments');
-  res.status(200).json({ message: 'Mock getClientEnrollments endpoint hit', params: req.params });
-};
+  const enrollment = await enrollmentService.createEnrollment(enrollmentData);
 
-const updateEnrollment = (req: Request, res: Response) => {
-  logger.info('Mock Enrollment Controller: updateEnrollment');
-  res
-    .status(200)
-    .json({ message: 'Mock updateEnrollment endpoint hit', params: req.params, body: req.body });
-};
+  res.status(httpStatus.CREATED).send(enrollment);
+});
 
-const deleteEnrollment = (req: Request, res: Response) => {
-  logger.info('Mock Enrollment Controller: deleteEnrollment');
-  res.status(200).json({ message: 'Mock deleteEnrollment endpoint hit', params: req.params });
-};
+/**
+ * Get enrollments for a specific client with pagination.
+ */
+const getClientEnrollments = catchAsync(async (req: Request, res: Response) => {
+  const clientId = req.params.clientId;
+
+  const options = req.query.options ? JSON.parse(req.query.options as string) : {};
+
+  const result = await enrollmentService.getEnrollmentsByClientId(clientId, options);
+
+  res.status(httpStatus.OK).send(result);
+});
+
+/**
+ * Update an enrollment by ID.
+ */
+const updateEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const enrollmentId = req.params.enrollmentId;
+  const updateBody = req.body;
+
+  const enrollment = await enrollmentService.updateEnrollmentById(enrollmentId, updateBody);
+
+  res.status(httpStatus.OK).send(enrollment);
+});
+
+/**
+ * Delete an enrollment by ID.
+ */
+const deleteEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const enrollmentId = req.params.enrollmentId;
+
+  await enrollmentService.deleteEnrollmentById(enrollmentId);
+
+  res.status(httpStatus.NO_CONTENT).send();
+});
 
 export default {
   createEnrollment,
