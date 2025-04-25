@@ -9,7 +9,10 @@ const validate = (schema: ZodSchema) => (req: Request, res: Response, next: Next
 
   if (!validationResult.success) {
     const errorMessage = validationResult.error.errors
-      .map((error) => `${error.path.join('.')}: ${error.message}`)
+      .map((error) => {
+        const path = error.path.join('.') || 'field';
+        return `${path}: ${error.message || 'Invalid input'}`;
+      })
       .join(', ');
 
     return next(new ApiError(httpStatus.BAD_REQUEST, errorMessage));
