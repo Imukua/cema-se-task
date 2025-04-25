@@ -4,7 +4,6 @@ import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
 import jwt from 'jsonwebtoken';
 import config from '../config/config';
-import moment from 'moment';
 import encription from '../utils/encription';
 
 /**
@@ -63,56 +62,56 @@ const loginUserWithEmailAndPassword = async (email: string, password: string): P
  * @returns {Promise<{ access: { token: string, expires: Date }, refresh: { token: string, expires: Date } }>} The access and refresh tokens.
  */
 const generateAuthTokens = async (
-  user: User
-): Promise<{
-  access: { token: string; expires: Date };
-  refresh: { token: string; expires: Date };
-}> => {
-  const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
-  const accessToken = jwt.sign({ sub: user.id, role: user.role }, config.jwt.secret, {
-    expiresIn: `${config.jwt.accessExpirationMinutes}m`
-  });
+  userId: string
+): Promise<{ access: { token: string }; refresh: { token: string } }> => {
+  const now = Math.floor(Date.now() / 1000);
+  const acc_exp = now + config.jwt.accessExpirationMinutes * 60;
+  const ref_exp = now + config.jwt.refreshExpirationDays * 24 * 60 * 60;
+  const iat = now;
+  const accessPayload = {
+    id: userId,
+    iat: iat,
+    exp: acc_exp
+  };
+  const refreshPayload = {
+    id: userId,
+    iat: iat,
+    exp: ref_exp
+  };
+  const accessToken = jwt.sign(accessPayload, config.jwt.secret);
+  const refreshToken = jwt.sign(refreshPayload, config.jwt.secret);
 
-  const refreshTokenExpires = moment().add(config.jwt.refreshExpirationDays, 'days');
-  const refreshToken = jwt.sign({ sub: user.id, role: user.role }, config.jwt.secret, {
-    expiresIn: `${config.jwt.refreshExpirationDays}d`
-  });
-
-  await saveToken(refreshToken, user.id, refreshTokenExpires.toDate());
+  await saveToken(userId, refreshToken, new Date(refreshPayload.exp * 1000).toISOString());
 
   return {
     access: {
-      token: accessToken,
-      expires: accessTokenExpires.toDate()
+      token: accessToken
     },
     refresh: {
-      token: refreshToken,
-      expires: refreshTokenExpires.toDate()
+      token: refreshToken
     }
   };
 };
-
 /**
  * Save a token
- * @param {string} token - The token string.
+ * @param {string} refreshToken - The token string.
  * @param {string} userId - The user ID associated with the token.
- * @param {Date} expires - The expiration date of the token.
- * @param {'refresh' | 'resetPassword' | 'verifyEmail'} type - The type of token.
- * @returns {Promise<Token>} The saved token record.
+ * @param {String} expiresAt - The expiration date of the token.
  */
-const saveToken = async (token: string, userId: string, expires: Date): Promise<any> => {
+const saveToken = async (
+  userId: string,
+  refreshToken: string,
+  expiresAt: string
+): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const tokenDoc = await prisma.token.create({
     data: {
-      token,
-      userId,
-      expiresAt: expires
-      // Assuming your Token model has a 'type' field
-      // type, // Add type field if it exists in your Token model
+      token: refreshToken,
+      userId: userId,
+      expiresAt: new Date(expiresAt)
     }
   });
-  return tokenDoc;
 };
-
 /**
  * Verify token and return token doc (or throw an error if it is not valid)
  * @param {string} token - The token string.
@@ -151,8 +150,8 @@ const verifyToken = async (token: string): Promise<any> => {
 const refreshAuthTokens = async (
   refreshToken: string
 ): Promise<{
-  access: { token: string; expires: Date };
-  refresh: { token: string; expires: Date };
+  access: { token: string };
+  refresh: { token: string };
 }> => {
   try {
     const refreshTokenDoc = await verifyToken(refreshToken);
@@ -170,7 +169,7 @@ const refreshAuthTokens = async (
     });
 
     // Generate new tokens
-    const newAuthTokens = await generateAuthTokens(user);
+    const newAuthTokens = await generateAuthTokens(user.id);
     return newAuthTokens;
   } catch (error: any) {
     throw new ApiError(httpStatus.UNAUTHORIZED, `Authentication failed: ${error.message}`);
