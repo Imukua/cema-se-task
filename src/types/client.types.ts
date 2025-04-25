@@ -3,10 +3,10 @@ import { z } from 'zod';
 export const ClientSchema = z.object({
   id: z.string().uuid(),
   fullName: z.string(),
-  dob: z.date(),
+  dob: z.coerce.date(),
   gender: z.string(),
-  contact: z.string().optional(),
-  notes: z.string().optional(),
+  contact: z.string(),
+  notes: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
   userId: z.string().uuid()
