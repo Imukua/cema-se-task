@@ -10,7 +10,7 @@ router.use(auth());
 router.post('/', validate(ClientCreateSchema), clientController.createClient);
 
 router.get('/', clientController.searchClients);
-
+router.get('/statistics', clientController.getStatistics);
 router.get('/:clientId', clientController.getClientProfile);
 
 router.patch('/:clientId', validate(ClientUpdateSchema), clientController.updateClient);

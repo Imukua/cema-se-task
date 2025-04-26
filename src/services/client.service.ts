@@ -1,5 +1,5 @@
 import prisma from '../db.client';
-import { Client, ClientCreate, ClientUpdate } from '../types/client.types';
+import { Client, ClientCreate, ClientUpdate, Statistics } from '../types/client.types';
 import { Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
@@ -33,49 +33,85 @@ const createClient = async (clientData: ClientCreate & { userId: string }): Prom
 };
 
 /**
- * Query for clients with pagination and optional filtering (search)
- * @param {object} filter - Filter options (e.g., { fullName: { contains: 'John' }, contact: '123' })
- * @param {object} options - Query options (e.g., { limit: 10, page: 1, sortBy: 'createdAt:asc' })
- * @returns {Promise<QueryResult<Client>>} Paginated result of clients.
+ * Query for clients with specific filters and pagination
+ * @param {number} page - Current page number (defaults to 1)
+ * @param {number} limit - Maximum number of results per page (defaults to 10)
+ * @param {string} [search] - Optional search term for fullName or contact
+ * @param {string} [gender] - Optional filter by gender
+ * @param {string} [sortBy] - Sort option in the format: field:(asc|desc)
+ * @returns {Promise<PaginatedResult<Client>>}
  */
 const queryClients = async (
-  filter: Prisma.ClientWhereInput,
-  options: { limit?: number; page?: number; sortBy?: string }
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  gender?: string,
+  sortBy?: string
 ): Promise<{
   results: Client[];
   totalResults: number;
   limit: number;
   page: number;
   totalPages: number;
+  hasNextPage: boolean;
 }> => {
-  const limit = options.limit ? options.limit : 10;
-  const page = options.page ? options.page : 1;
   const skip = (page - 1) * limit;
-  const sortBy: any = options.sortBy
-    ? options.sortBy
-        .split(':')
-        .reduce((acc: any, [key, order]: any) => ({ ...acc, [key]: order }), {})
-    : {};
 
+  // Build the filter object dynamically
+  const filters: Prisma.ClientWhereInput = {};
+
+  if (search) {
+    // Assuming search applies to fullName or contact
+    filters.OR = [
+      { fullName: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+      { contact: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }
+    ];
+  }
+
+  if (gender) {
+    filters.gender = gender;
+  }
+
+  // Correctly parse sortBy string
+  let orderBy: any = {};
+  if (sortBy) {
+    const [key, order] = sortBy.split(':');
+    if (key && (order === 'asc' || order === 'desc')) {
+      // Ensure the key is a valid sortable field for Client
+      // Add checks here if necessary, e.g., if (!['fullName', 'createdAt'].includes(key)) throw new Error('Invalid sort field');
+      orderBy = { [key]: order };
+    }
+    // Optional: Add error handling here if sortBy format is invalid
+  } else {
+    // Default sort if none is provided
+    orderBy = { createdAt: 'desc' };
+  }
+
+  // Fetch the clients with pagination and filters
   const clients = await prisma.client.findMany({
-    where: filter,
+    where: filters,
     skip,
     take: limit,
-    orderBy: sortBy
+    orderBy: orderBy // Use the correctly parsed orderBy object
   });
 
+  // Get the total count of clients with the same filters
   const totalResults = await prisma.client.count({
-    where: filter
+    where: filters
   });
 
   const totalPages = Math.ceil(totalResults / limit);
+
+  // Calculate if there is a next page
+  const hasNextPage = skip + limit < totalResults;
 
   return {
     results: clients,
     totalResults,
     limit,
     page,
-    totalPages
+    totalPages,
+    hasNextPage
   };
 };
 
@@ -135,10 +171,35 @@ const deleteClientById = async (clientId: string): Promise<Client> => {
   return client;
 };
 
+const getStatistics = async (): Promise<Statistics> => {
+  // Fetch total count of clients
+  const totalClients = await prisma.client.count();
+
+  // Fetch total count of health programs
+  const totalPrograms = await prisma.healthProgram.count();
+
+  // Fetch total count of all enrollments
+  const totalEnrollments = await prisma.enrollment.count();
+
+  // Fetch count of enrollments with status 'active'
+  const activeEnrollments = await prisma.enrollment.count({
+    where: {
+      status: 'active'
+    }
+  });
+  return {
+    totalClients,
+    totalPrograms,
+    totalEnrollments,
+    activeEnrollments
+  };
+};
+
 export default {
   createClient,
   queryClients,
   getClientById,
   updateClientById,
-  deleteClientById
+  deleteClientById,
+  getStatistics
 };
