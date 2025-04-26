@@ -9,9 +9,8 @@ const router = express.Router();
 router.use(auth());
 
 router.post('/', validate(EnrollmentCreateSchema), enrollmentController.createEnrollment);
-
+router.get('/', enrollmentController.searchEnrollments);
 router.get('/client/:clientId', enrollmentController.getClientEnrollments);
-
 router.patch(
   '/:enrollmentId',
   validate(EnrollmentUpdateSchema),
