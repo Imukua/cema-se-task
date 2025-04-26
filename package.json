@@ -8,14 +8,15 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
-    "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
+    "start": "npm build && pm2 start ecosystem.config.json --no-daemon",
     "postinstall": "prisma generate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check **/*.ts",
     "prettier:fix": "prettier --write **/*.ts",
     "prepare": "husky install",
-    "db:push": "npx prisma migrate dev --name ${name} && npx prisma generate"
+    "db:push": "npx prisma migrate dev --name ${name} && npx prisma generate",
+    "build": "rimraf build && tsc -p tsconfig.json"
   },
   "husky": {
     "hooks": {
