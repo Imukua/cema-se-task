@@ -129,7 +129,7 @@ const verifyToken = async (token: string): Promise<any> => {
   });
 
   if (!tokenDoc) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Token not found or expired');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Token not found or expired');
   }
 
   // Optional: Verify the JWT payload if it's a JWT token
@@ -153,7 +153,9 @@ const refreshAuthTokens = async (
   access: { token: string };
   refresh: { token: string };
 }> => {
+  console.log('refreshAuthTokens', refreshToken);
   try {
+    console.log('Verifying refresh token');
     const refreshTokenDoc = await verifyToken(refreshToken);
     const user = await prisma.user.findUnique({
       where: { id: refreshTokenDoc.userId }

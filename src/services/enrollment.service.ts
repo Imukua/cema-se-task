@@ -1,6 +1,6 @@
 import prisma from '../db.client';
 import { Enrollment, EnrollmentCreate, EnrollmentUpdate } from '../types/enrollment.types';
-import { Prisma } from '@prisma/client';
+import { EnrollmentStatus, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
 
@@ -42,53 +42,91 @@ const createEnrollment = async (enrollmentData: EnrollmentCreate): Promise<Enrol
 };
 
 /**
- * Query for enrollments with pagination and optional filtering
- * @param {object} filter - Filter options (e.g., { clientId: 'abc', status: 'active' })
- * @param {object} options - Query options (e.g., { limit: 10, page: 1, sortBy: 'enrolledAt:desc' })
- * @returns {Promise<QueryResult<Enrollment>>} Paginated result of enrollments.
+ * Query for enrollments with specific filters and pagination
+ * @param {number} page - Current page number (defaults to 1)
+ * @param {number} limit - Maximum number of results per page (defaults to 10)
+ * @param {string} [clientId] - Optional filter by client ID
+ * @param {string} [programId] - Optional filter by program ID
+ * @param {EnrollmentStatus} [status] - Optional filter by enrollment status
+ * @param {string} [sortBy] - Sort option in the format: field:(asc|desc)
+ * @returns {Promise<PaginatedResult<Enrollment>>}
  */
 const queryEnrollments = async (
-  filter: Prisma.EnrollmentWhereInput,
-  options: { limit?: number; page?: number; sortBy?: string }
+  page: number = 1,
+  limit: number = 10,
+  clientId?: string,
+  programId?: string,
+  status?: EnrollmentStatus,
+  sortBy?: string
 ): Promise<{
   results: Enrollment[];
   totalResults: number;
   limit: number;
   page: number;
   totalPages: number;
+  hasNextPage: boolean;
 }> => {
-  const limit = options.limit ? options.limit : 10;
-  const page = options.page ? options.page : 1;
   const skip = (page - 1) * limit;
-  const sortBy: any = options.sortBy
-    ? options.sortBy
-        .split(':')
-        .reduce((acc: any, [key, order]: any) => ({ ...acc, [key]: order }), {})
-    : {};
 
+  // Build the filter object dynamically
+  const filters: Prisma.EnrollmentWhereInput = {};
+
+  if (clientId) {
+    filters.clientId = clientId;
+  }
+
+  if (programId) {
+    filters.programId = programId;
+  }
+
+  if (status) {
+    filters.status = status;
+  }
+
+  // Correctly parse sortBy string
+  let orderBy: any = {};
+  if (sortBy) {
+    const [key, order] = sortBy.split(':');
+    if (key && (order === 'asc' || order === 'desc')) {
+      // Ensure the key is a valid sortable field for Enrollment
+      // Add checks here if necessary, e.g., if (!['enrolledAt', 'status', 'createdAt'].includes(key)) throw new Error('Invalid sort field');
+      orderBy = { [key]: order };
+    }
+    // Optional: Add error handling here if sortBy format is invalid
+  } else {
+    // Default sort if none is provided
+    orderBy = { enrolledAt: 'desc' }; // Default sort by enrollment date descending
+  }
+
+  // Fetch the enrollments with pagination and filters, including related client and program
   const enrollments = await prisma.enrollment.findMany({
-    where: filter,
+    where: filters,
     skip,
     take: limit,
-    orderBy: sortBy,
+    orderBy: orderBy, // Use the correctly parsed orderBy object
     include: {
       client: true,
       healthProgram: true
     }
   });
 
+  // Get the total count of enrollments with the same filters
   const totalResults = await prisma.enrollment.count({
-    where: filter
+    where: filters
   });
 
   const totalPages = Math.ceil(totalResults / limit);
+
+  // Calculate if there is a next page
+  const hasNextPage = skip + limit < totalResults;
 
   return {
     results: enrollments,
     totalResults,
     limit,
     page,
-    totalPages
+    totalPages,
+    hasNextPage
   };
 };
 
@@ -149,28 +187,34 @@ const deleteEnrollmentById = async (enrollmentId: string): Promise<Enrollment> =
 };
 
 /**
- * Get enrollments for a specific client with pagination
- * @param {string} clientId - Client ID.
- * @param {object} options - Query options (e.g., { limit: 10, page: 1, sortBy: 'enrolledAt:desc' })
- * @returns {Promise<QueryResult<Enrollment>>} Paginated result of enrollments for the client.
+ * Get enrollments for a specific client with pagination and sorting.
+ * @param {string} clientId - The ID of the client.
+ * @param {PaginationOptions} options - Pagination and sorting options.
+ * @returns {Promise<PaginatedResult<Enrollment>>}
+ * @throws {ApiError} If the client is not found.
  */
 const getEnrollmentsByClientId = async (
-  clientId: string,
-  options: { limit?: number; page?: number; sortBy?: string }
+  page: number = 1,
+  limit: number = 10,
+  clientId?: string,
+  programId?: string,
+  status?: EnrollmentStatus,
+  sortBy?: string
 ): Promise<{
   results: Enrollment[];
   totalResults: number;
   limit: number;
   page: number;
   totalPages: number;
+  hasNextPage: boolean;
 }> => {
+  // Check if the client exists
   const clientExists = await prisma.client.findUnique({ where: { id: clientId } });
   if (!clientExists) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Client not found');
   }
 
-  const filter: Prisma.EnrollmentWhereInput = { clientId };
-  return queryEnrollments(filter, options);
+  return queryEnrollments(page, limit, clientId, programId, status, sortBy);
 };
 
 export default {

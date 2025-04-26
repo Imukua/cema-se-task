@@ -5,52 +5,70 @@ import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
 
 /**
- * Query for users with pagination
- * @param {object} filter - Filter options (e.g., { name: 'John', role: 'USER' })
- * @param {object} options - Query options (e.g., { limit: 10, page: 1, sortBy: 'createdAt:asc' })
- * @returns {Promise<QueryResult<User>>} Paginated result of users.
+ * Query for users with specific filters and pagination
+ * @param {number} page - Current page number (defaults to 1)
+ * @param {number} limit - Maximum number of results per page (defaults to 10)
+ * @param {string} [search] - Optional search term for user name or email
+ * @param {string} [sortBy] - Sort option in the format: field:(asc|desc)
+ * @returns {Promise<PaginatedResult<User>>} Paginated result of users.
  */
 const queryUsers = async (
-  filter: Prisma.UserWhereInput,
-  options: { limit?: number; page?: number; sortBy?: string }
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  sortBy?: string
 ): Promise<{
   results: User[];
   totalResults: number;
   limit: number;
   page: number;
   totalPages: number;
+  hasNextPage?: boolean;
 }> => {
-  const limit = options.limit ? options.limit : 10;
-  const page = options.page ? options.page : 1;
   const skip = (page - 1) * limit;
-  const sortBy: any = options.sortBy
-    ? options.sortBy
-        .split(':')
-        .reduce((acc: any, [key, order]: any) => ({ ...acc, [key]: order }), {})
-    : {};
 
+  const filters: Prisma.UserWhereInput = {};
+
+  if (search) {
+    filters.OR = [
+      { name: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+      { email: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }
+    ];
+  }
+
+  let orderBy: any = {};
+  if (sortBy) {
+    const [key, order] = sortBy.split(':');
+    if (key && (order === 'asc' || order === 'desc')) {
+      orderBy = { [key]: order };
+    }
+  } else {
+    orderBy = { createdAt: 'desc' };
+  }
   const users = await prisma.user.findMany({
-    where: filter,
+    where: filters,
     skip,
     take: limit,
-    orderBy: sortBy
+    orderBy: orderBy
   });
 
   const totalResults = await prisma.user.count({
-    where: filter
+    where: filters
   });
 
   const totalPages = Math.ceil(totalResults / limit);
+
+  const hasNextPage = skip + limit < totalResults;
 
   return {
     results: users,
     totalResults,
     limit,
     page,
-    totalPages
+    totalPages,
+    hasNextPage
   };
 };
-
 /**
  * Get user by id
  * @param {string} id - User ID.
