@@ -13,10 +13,12 @@ const getUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getUsers = catchAsync(async (req: Request, res: Response) => {
-  const filter = req.query.filter ? JSON.parse(req.query.filter as string) : {};
-  const options = req.query.options ? JSON.parse(req.query.options as string) : {};
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const search = req.query.search as string | undefined;
+  const sortBy = req.query.sortBy as string | undefined;
 
-  const result = await userService.queryUsers(filter, options);
+  const result = await userService.queryUsers(page, limit, search, sortBy);
 
   res.status(httpStatus.OK).send(result);
 });
