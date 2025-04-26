@@ -1,5 +1,5 @@
 import prisma from '../db.client';
-import { Client, ClientCreate, ClientUpdate } from '../types/client.types';
+import { Client, ClientCreate, ClientUpdate, Statistics } from '../types/client.types';
 import { Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
@@ -171,10 +171,35 @@ const deleteClientById = async (clientId: string): Promise<Client> => {
   return client;
 };
 
+const getStatistics = async (): Promise<Statistics> => {
+  // Fetch total count of clients
+  const totalClients = await prisma.client.count();
+
+  // Fetch total count of health programs
+  const totalPrograms = await prisma.healthProgram.count();
+
+  // Fetch total count of all enrollments
+  const totalEnrollments = await prisma.enrollment.count();
+
+  // Fetch count of enrollments with status 'active'
+  const activeEnrollments = await prisma.enrollment.count({
+    where: {
+      status: 'active'
+    }
+  });
+  return {
+    totalClients,
+    totalPrograms,
+    totalEnrollments,
+    activeEnrollments
+  };
+};
+
 export default {
   createClient,
   queryClients,
   getClientById,
   updateClientById,
-  deleteClientById
+  deleteClientById,
+  getStatistics
 };

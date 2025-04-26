@@ -67,10 +67,20 @@ const deleteClient = catchAsync(async (req: Request, res: Response) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+/**
+ * Get statistics about clients.
+ */
+const getStatistics = catchAsync(async (req: Request, res: Response) => {
+  const statistics = await clientService.getStatistics();
+
+  res.status(httpStatus.OK).send(statistics);
+});
+
 export default {
   createClient,
   searchClients,
   getClientProfile,
   updateClient,
-  deleteClient
+  deleteClient,
+  getStatistics
 };
