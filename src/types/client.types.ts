@@ -23,6 +23,29 @@ export const ClientUpdateSchema = ClientSchema.partial().omit({
   updatedAt: true,
   userId: true
 });
+export type RecentClient = {
+  id: string;
+  fullName: string;
+  createdAt: Date;
+};
+
+export type Statistics = {
+  client: {
+    total: number;
+    recent: RecentClient[];
+  };
+  programs: {
+    total: number;
+  };
+  enrollments: {
+    total: number;
+    distribution: {
+      active: number;
+      completed: number;
+      dropped: number;
+    };
+  };
+};
 export type Client = z.infer<typeof ClientSchema>;
 export type ClientCreate = z.infer<typeof ClientCreateSchema>;
 export type ClientUpdate = z.infer<typeof ClientUpdateSchema>;
