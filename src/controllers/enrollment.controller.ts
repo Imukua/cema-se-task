@@ -78,10 +78,20 @@ const deleteEnrollment = catchAsync(async (req: Request, res: Response) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const getEnrollmentById = catchAsync(async (req: Request, res: Response) => {
+  const enrollmentId = req.params.enrollmentId;
+  const enrollment = await enrollmentService.getEnrollmentById(enrollmentId);
+  if (!enrollment) {
+    res.status(httpStatus.NOT_FOUND).send({ message: 'Enrollment not found' });
+  }
+  res.status(httpStatus.OK).send(enrollment);
+});
+
 export default {
   createEnrollment,
   getClientEnrollments,
   updateEnrollment,
   deleteEnrollment,
-  searchEnrollments
+  searchEnrollments,
+  getEnrollmentById
 };

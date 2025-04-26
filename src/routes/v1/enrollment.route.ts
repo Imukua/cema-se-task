@@ -10,6 +10,7 @@ router.use(auth());
 
 router.post('/', validate(EnrollmentCreateSchema), enrollmentController.createEnrollment);
 router.get('/', enrollmentController.searchEnrollments);
+router.get('/:enrollmentId', enrollmentController.getEnrollmentById);
 router.get('/client/:clientId', enrollmentController.getClientEnrollments);
 router.patch(
   '/:enrollmentId',
