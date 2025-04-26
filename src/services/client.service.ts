@@ -1,5 +1,11 @@
 import prisma from '../db.client';
-import { Client, ClientCreate, ClientUpdate, Statistics } from '../types/client.types';
+import {
+  Client,
+  ClientCreate,
+  ClientUpdate,
+  RecentClient,
+  Statistics
+} from '../types/client.types';
 import { Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
@@ -171,27 +177,55 @@ const deleteClientById = async (clientId: string): Promise<Client> => {
   return client;
 };
 
+/**
+ * @description Service function to fetch various statistics from the database.
+ * @returns {Promise<Statistics>} An object containing the requested statistics.
+ */
 const getStatistics = async (): Promise<Statistics> => {
-  // Fetch total count of clients
   const totalClients = await prisma.client.count();
 
-  // Fetch total count of health programs
-  const totalPrograms = await prisma.healthProgram.count();
-
-  // Fetch total count of all enrollments
-  const totalEnrollments = await prisma.enrollment.count();
-
-  // Fetch count of enrollments with status 'active'
-  const activeEnrollments = await prisma.enrollment.count({
-    where: {
-      status: 'active'
+  const recentClients = await prisma.client.findMany({
+    take: 5,
+    orderBy: {
+      createdAt: 'desc'
+    },
+    select: {
+      id: true,
+      fullName: true,
+      createdAt: true
     }
   });
+
+  const totalPrograms = await prisma.healthProgram.count();
+
+  const totalEnrollments = await prisma.enrollment.count();
+
+  const enrollmentStatusCounts = await prisma.enrollment.groupBy({
+    by: ['status'],
+    _count: {
+      status: true
+    }
+  });
+
+  const enrollmentDistribution = {
+    active: enrollmentStatusCounts.find((count) => count.status === 'active')?._count.status || 0,
+    completed:
+      enrollmentStatusCounts.find((count) => count.status === 'completed')?._count.status || 0,
+    dropped: enrollmentStatusCounts.find((count) => count.status === 'dropped')?._count.status || 0
+  };
+
   return {
-    totalClients,
-    totalPrograms,
-    totalEnrollments,
-    activeEnrollments
+    client: {
+      total: totalClients,
+      recent: recentClients as RecentClient[]
+    },
+    programs: {
+      total: totalPrograms
+    },
+    enrollments: {
+      total: totalEnrollments,
+      distribution: enrollmentDistribution
+    }
   };
 };
 
