@@ -8,7 +8,7 @@ This project implements a backend system for managing clients and their enrollme
 
 |                                                          Link                                                           | Description                |
 | :---------------------------------------------------------------------------------------------------------------------: | :------------------------- |
-|                                    🌐 [Live Website](https://cemasystem.vercel.app)                                     | Visit the deployed project |
+|                                🌐 [Live Website](https://cemasystem.vercel.app/landing)                                 | Visit the deployed project |
 |                             📚 [API Documentation](https://cemasystem.vercel.app/api-docs)                              | Explore the API endpoints  |
 | 🎤 [Presentation](https://docs.google.com/presentation/d/1CWhjayWJKWvvWRca8X6KXrs4F14mfR4xaur6P8TPWCw/edit?usp=sharing) | View project presentation  |
 |           🎥 [Video Demo](https://drive.google.com/file/d/19CTpUJV7c8-Z1nGFRVsmE0Y64AzhBk3I/view?usp=sharing)           | Watch the demo             |
