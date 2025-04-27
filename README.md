@@ -2,14 +2,20 @@
 
 This project implements a backend system for managing clients and their enrollment in various health programs (e.g., HIV, TB, Malaria). It demonstrates clean architecture principles using TypeScript, Express.js, and Prisma ORM with PostgreSQL.
 
-You can access the live application here:  
-**[https://cemasystem.vercel.app/](https://cemasystem.vercel.app/)**
+# 🔗 Project Links
 
-## 🔗 Frontend Repository
+---
 
-This frontend application interacts with a separate backend API.  
-You can find the backend code here:  
-**[https://github.com/Imukua/cema-se-task-frontend](https://github.com/Imukua/cema-se-task-frontend)**
+|                                                          Link                                                           | Description                |
+| :---------------------------------------------------------------------------------------------------------------------: | :------------------------- |
+|                                    🌐 [Live Website](https://cemasystem.vercel.app)                                     | Visit the deployed project |
+|                             📚 [API Documentation](https://cemasystem.vercel.app/api-docs)                              | Explore the API endpoints  |
+| 🎤 [Presentation](https://docs.google.com/presentation/d/1CWhjayWJKWvvWRca8X6KXrs4F14mfR4xaur6P8TPWCw/edit?usp=sharing) | View project presentation  |
+|           🎥 [Video Demo](https://drive.google.com/file/d/19CTpUJV7c8-Z1nGFRVsmE0Y64AzhBk3I/view?usp=sharing)           | Watch the demo             |
+|                                🖥️ [Backend Repo](https://github.com/Imukua/cema-se-task)                                | See the backend code       |
+|                          💻 [Frontend Repo](https://github.com/Imukua/cema-se-task/tree/main)                           | See the frontend code      |
+
+---
 
 ---
 
